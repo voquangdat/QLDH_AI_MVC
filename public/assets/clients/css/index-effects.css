@@ -1,0 +1,119 @@
+/* Product hover effects */
+.product-col {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.product-col:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Image transition effects */
+.product-top1 {
+    position: relative;
+    overflow: hidden;
+}
+
+.main-image, .hover-image {
+    transition: opacity 0.5s ease-in-out;
+}
+
+.hover-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+}
+
+.product-top1:hover .main-image {
+    opacity: 0;
+}
+
+.product-top1:hover .hover-image {
+    opacity: 1;
+}
+
+/* Button effects */
+.price-product a {
+    display: inline-block;
+    padding: 8px 20px;
+    background: #ff4141;
+    color: white;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.price-product a:hover {
+    background: #ff2828;
+    transform: scale(1.05);
+}
+
+.price-product a:active {
+    transform: scale(0.95);
+}
+
+/* Product title effects */
+.name-product h4 {
+    transition: color 0.3s ease;
+}
+
+.product-col:hover .name-product h4 {
+    color: #ff4141;
+}
+
+/* Price effects */
+.price-product h3 span {
+    color: #ff4141;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.price-product h3:hover span {
+    transform: scale(1.1);
+}
+
+/* Fade in animation for products */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.product-col {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.product-col:nth-child(1) { animation-delay: 0.1s; }
+.product-col:nth-child(2) { animation-delay: 0.2s; }
+.product-col:nth-child(3) { animation-delay: 0.3s; }
+.product-col:nth-child(4) { animation-delay: 0.4s; }
+
+/* Link effects */
+.link-product .all-product {
+    display: inline-block;
+    padding: 10px 30px;
+    background: #333;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.link-product .all-product:hover {
+    background: #ff4141;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 65, 65, 0.2);
+}

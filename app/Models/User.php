@@ -8,9 +8,8 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    // use HasApiTokens, Notifiable;
-    use Notifiable;
-    // use HasApiTokens;
+    
+    use Notifiable;    
 
     protected $table = 'users';
     protected $primaryKey = 'user_id';

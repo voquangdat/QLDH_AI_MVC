@@ -1,0 +1,183 @@
+/* Đảm bảo body và trang chủ luôn hiển thị đúng */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding-top: 80px; /* Đảm bảo nội dung không bị che bởi thanh điều hướng */
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+}
+
+.student {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin: 20px 0; /* Cải thiện khoảng cách trên dưới */
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.student img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+.student h3 {
+    color: #337ab7;
+}
+
+/* Thiết lập chung cho contact-section */
+.contact-section {
+    display: flex;
+    justify-content: center;
+    padding: 50px 0;
+    background-color: #f8f9fa;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    padding: 0 15px;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+/* Thiết lập thông tin sinh viên */
+.student-info {
+    width: 40%;
+    margin-right: 5%;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.student-info h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.student-info .student {
+    margin-bottom: 20px;
+}
+
+.student-info p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+/* Thiết lập form liên hệ */
+.contact-form {
+    width: 55%;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.contact-form h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.form-group input {
+    width: 48%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.contact-form button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.contact-form button[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+    margin-right: 10px;
+}
+
+.contact-form button[type="reset"] {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+/* Thanh điều hướng (menu) */
+.top-menu-items {
+    position: relative;
+    z-index: 1000; /* Đảm bảo menu luôn ở trên các phần tử khác */
+}
+
+.top-menu-items ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+.top-menu-items li {
+    position: relative;
+    padding: 10px 20px;
+}
+
+.top-menu-items li a {
+    text-decoration: none;
+    color: black;
+    padding: 10px 20px;
+    display: block;
+}
+
+.top-menu-items li:hover ul {
+    display: block;
+}
+
+.top-menu-item {
+    position: absolute;
+    display: none;
+    background-color: #fff;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    list-style: none;
+    margin-top: 10px;
+}
+
+.top-menu-item li {
+    width: 200px;
+}
+
+.top-menu-item li a {
+    padding: 10px;
+    color: #333;
+}
+
+.top-menu-item li a:hover {
+    background-color: #f1f1f1;
+}

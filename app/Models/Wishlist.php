@@ -10,8 +10,9 @@ class Wishlist extends Model
     protected $primaryKey = 'wishlist_id';
     protected $keyType = 'int';
     public $incrementing = true;
+    public $timestamps = false;
 
-    protected $fillable = ['users_id', 'product_id', 'variant_id'];
+    protected $fillable = ['users_id', 'product_id', 'variant_id', 'added_date'];
 
     protected $casts = [
         'added_date' => 'datetime',

@@ -20,7 +20,7 @@
         </div>
     </section>
     {{-- Slider JS giữ nguyên, chỉ copy từ slider.php cũ --}}
-    <script src="{{ asset('assets/clients/js/slider.js') }}"></script>
+    {{-- <script src="{{ asset('assets/clients/js/slider.js') }}"></script> --}}
     <script>
 let currentSlide = 0;
 const slides = document.querySelectorAll('.slider-image');

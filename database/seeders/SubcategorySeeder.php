@@ -10,13 +10,13 @@ class SubcategorySeeder extends Seeder
 {
     public function run(): void
     {
-        $catClb = Category::where('category_name', 'AO CLB')->first();
-        $catQg  = Category::where('category_name', 'AO DOI TUYEN QUOC GIA')->first();
+        $catClb = Category::where('category_name', 'ÁO CLB')->first();
+        $catQg  = Category::where('category_name', 'ÁO ĐỘI TUYỂN QUỐC GIA')->first();
 
         if ($catClb) {
             $clbSubs = [
-                'Man United', 'Man City', 'Real Madrid',
-                'Barcelona', 'PSG', 'Liverpool',
+                'Ngoại Hạng Anh', 'Laliga', 'Serie A',
+                'Ligue 1', 'Bundesliga',
             ];
             foreach ($clbSubs as $name) {
                 Subcategory::firstOrCreate(

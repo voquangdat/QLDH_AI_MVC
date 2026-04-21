@@ -14,10 +14,10 @@
                     <li><a href="{{ route('home') }}"><i class="fas fa-home"></i> Trang chủ</a></li>
 
                     {{-- Danh mục động từ DB --}}
-                    @foreach($categories ?? [] as $category)
+                    @foreach($categories as $category)
                     <li>
-                        <a href="{{ route('category.index', ['danhmuc_id' => $category->danhmuc_id]) }}">
-                            {{ $category->danhmuc_ten }}
+                        <a href="{{ route('category.index', ['category_id' => $category->category_id]) }}">
+                            {{ $category->category_name }}
                             @if($category->subcategories->count())
                             <i class="fas fa-chevron-down"></i>
                             @endif
@@ -26,8 +26,8 @@
                         <ul class="top-menu-item">
                             @foreach($category->subcategories as $sub)
                             <li>
-                                <a href="{{ route('category.index', ['loaisanpham_id' => $sub->loaisanpham_id]) }}">
-                                    <i class="fas fa-tag"></i> {{ $sub->loaisanpham_ten }}
+                                <a href="{{ route('category.index', ['subcategory_id' => $sub->subcategory_id]) }}">
+                                    <i class="fas fa-tag"></i> {{ $sub->subcategory_name }}
                                 </a>
                             </li>
                             @endforeach

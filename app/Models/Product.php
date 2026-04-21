@@ -13,11 +13,12 @@ class Product extends Model
 
     protected $fillable = [
         'product_name', 'description', 'care_note', 'category_id',
-        'subcategory_id', 'product_gia'
+        'subcategory_id', 'product_gia', 'product_hot'
     ];
 
     protected $casts = [
         'product_gia' => 'decimal:2',
+        'product_hot' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -40,10 +40,10 @@
                     <h3><i class="fas fa-mobile-alt"></i> Tải ứng dụng VOXFootball</h3>
                     <div class="app-download">
                         <a href="#" class="app-btn">
-                            <img src="/public/image/appstore.jpg" alt="App Store">
+                            <img src="{{ asset('assets/clients/image/appstore.jpg') }}" alt="App Store">
                         </a>
                         <a href="#" class="app-btn">
-                            <img src="/public/image/googleplay.jpg" alt="Google Play">
+                            <img src="{{ asset('assets/clients/image/googleplay.jpg') }}" alt="Google Play">
                         </a>
                     </div>
                 </div>
@@ -127,7 +127,7 @@
         <div class="footer-bottom">
             <div class="footer-bottom-content">
                 <div class="footer-logo">
-                    <img src="/public/image/logoShop.png" alt="VoxFootball Logo">
+                    <img src="{{ asset('assets/clients/image/logoShop.png') }}" alt="VoxFootball Logo">
                     <span>VoxFootball</span>
                 </div>
                 <div class="footer-copyright">
@@ -135,7 +135,7 @@
                             style="color: #e74c3c;"></i> by VoxTeam</p>
                 </div>
                 <div class="footer-certificates">
-                    <img src="/public/image/dathongbao.png" alt="Đã thông báo Bộ Công Thương">
+                    <img src="{{ asset('assets/clients/image/dathongbao.png') }}" alt="Đã thông báo Bộ Công Thương">
                 </div>
             </div>
         </div>

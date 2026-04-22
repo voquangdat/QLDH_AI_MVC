@@ -20,6 +20,14 @@ class UserSeeder extends Seeder
                 'is_active' => true,
             ],
             [
+                'fullname'  => 'Vo Quang Dat',
+                'email'     => 'voquangdat03072004@gmail.com',
+                'password'  => Hash::make('Dat227889#'),
+                'phone'     => '0903527632',
+                'role_id'   => 1,
+                'is_active' => true,
+            ],
+            [
                 'fullname'  => 'Staff',
                 'email'     => 'staff@voxfootball.com',
                 'password'  => Hash::make('password'),

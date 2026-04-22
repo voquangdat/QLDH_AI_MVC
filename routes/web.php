@@ -2,9 +2,33 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Admin\AuthController;
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Controllers\Client\AuthController as ClientAuthController;
 
 // Trang chủ
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Admin Auth (không cần middleware)
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
+
+// Admin Dashboard (cần middleware admin)
+Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('dashboard');
+});
+
+// Client Auth
+Route::get('/dang-nhap', [ClientAuthController::class, 'showLogin'])->name('login');
+Route::post('/dang-nhap', [ClientAuthController::class, 'login'])->name('login.post');
+Route::get('/dang-ky', [ClientAuthController::class, 'showRegister'])->name('register');
+Route::post('/dang-ky', [ClientAuthController::class, 'register'])->name('register.post');
+Route::post('/dang-xuat', [ClientAuthController::class, 'logout'])->name('logout');
 
 // Danh mục
 Route::get('/danh-muc', function () { return redirect('/'); })->name('category.index');
@@ -24,8 +48,3 @@ Route::get('/don-hang', function () { return redirect('/'); })->name('orders');
 Route::get('/profile', function () { return redirect('/'); })->name('profile');
 Route::get('/tin-tuc', function () { return redirect('/'); })->name('news');
 Route::get('/lien-he', function () { return redirect('/'); })->name('contact');
-
-// Auth
-Route::get('/dang-nhap', function () { return redirect('/'); })->name('login');
-Route::get('/dang-ky', function () { return redirect('/'); })->name('register');
-Route::post('/dang-xuat', function () { return redirect('/'); })->name('logout');

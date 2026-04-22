@@ -23,10 +23,11 @@ class User extends Authenticatable
     protected $hidden = ['password', 'remember_token'];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'email_verified_at' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'role_id'            => 'integer',
+        'is_active'          => 'boolean',
+        'email_verified_at'  => 'datetime',
+        'created_at'         => 'datetime',
+        'updated_at'         => 'datetime',
     ];
 
     // ===== Relationships =====
@@ -66,14 +67,14 @@ class User extends Authenticatable
     }
 
     // ===== Helpers =====
-    public function isAdmin()
+    public function isAdmin(): bool
     {
-        return $this->role_id == 1;
+        return $this->role_id === 1;
     }
 
     public function isCustomer()
     {
-        return $this->role_id == 3;
+        return $this->role_id === 3;
     }
 
     public function defaultShippingAddress()

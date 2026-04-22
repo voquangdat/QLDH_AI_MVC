@@ -49,17 +49,20 @@
                     </li>
 
                     <li class="user-account">
-                        @auth
+                        @if(Auth::check() && !Auth::user()->isAdmin())
+                        {{-- User thường đã đăng nhập --}}
                         <a href="#" class="user-dropdown-toggle">
                             <i class="fas fa-user-circle"></i>
-                            <span class="user-name">{{ auth()->user()->full_name }}</span>
+                            <span class="user-name">{{ auth()->user()->fullname }}</span>
                             <i class="fas fa-chevron-down"></i>
                         </a>
                         <div class="user-dropdown-menu">
-                            <a href="{{ route('profile') }}" class="dropdown-item"><i class="fas fa-user"></i> Thông tin
-                                cá nhân</a>
-                            <a href="{{ route('orders') }}" class="dropdown-item"><i class="fas fa-shopping-bag"></i>
-                                Đơn hàng</a>
+                            <a href="{{ route('profile') }}" class="dropdown-item">
+                                <i class="fas fa-user"></i> Thông tin cá nhân
+                            </a>
+                            <a href="{{ route('orders') }}" class="dropdown-item">
+                                <i class="fas fa-shopping-bag"></i> Đơn hàng
+                            </a>
                             <div class="dropdown-divider"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -69,6 +72,7 @@
                             </form>
                         </div>
                         @else
+                        {{-- Chưa đăng nhập hoặc đang dùng tài khoản admin --}}
                         <div class="auth-buttons">
                             <a href="{{ route('login') }}" class="auth-btn login-btn">
                                 <i class="fas fa-sign-in-alt"></i> Đăng nhập
@@ -78,7 +82,7 @@
                                 <i class="fas fa-user-plus"></i> Đăng ký
                             </a>
                         </div>
-                        @endauth
+                        @endif
                     </li>
 
                     <li>

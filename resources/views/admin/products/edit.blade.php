@@ -264,16 +264,18 @@
                 <a href="{{ route('admin.products.list') }}" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Hủy bỏ
                 </a>
-                <form action="{{ route('admin.products.destroy', $product) }}" method="POST"
-                      style="display:inline; margin-left:auto"
-                      onsubmit="return confirm('Xóa sản phẩm này? Hành động không thể hoàn tác!')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash"></i> Xóa sản phẩm
-                    </button>
-                </form>
             </div>
+        </form>
+
+        {{-- Form xóa phải đặt NGOÀI form cập nhật --}}
+        <form action="{{ route('admin.products.destroy', $product) }}" method="POST"
+              style="margin-top:12px"
+              onsubmit="return confirm('Xóa sản phẩm này? Hành động không thể hoàn tác!')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Xóa sản phẩm
+            </button>
         </form>
     </div>
 

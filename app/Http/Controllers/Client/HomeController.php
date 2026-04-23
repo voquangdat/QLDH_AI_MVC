@@ -10,6 +10,7 @@ class HomeController extends Controller
     public function index()
     {
         $featuredProducts = Product::with(['images', 'variants.inventory'])
+            ->where('product_hot', true)
             ->latest()
             ->take(8)
             ->get();

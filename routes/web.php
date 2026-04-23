@@ -15,7 +15,9 @@ Route::post('/dang-ky', [AuthController::class, 'register'])->name('register.pos
 Route::post('/dang-xuat', [AuthController::class, 'logout'])->name('logout');
 
 // Danh mục
-Route::get('/danh-muc', function () { return redirect('/'); })->name('category.index');
+// Thay dòng cũ bằng dòng này ✅
+Route::get('/danh-muc', [\App\Http\Controllers\Client\CategoryController::class, 'index'])
+    ->name('category.index');
 Route::get('/danh-muc/{id}', function () { return redirect('/'); })->name('category.show');
 
 // Sản phẩm

@@ -186,7 +186,7 @@ class ProductController extends Controller
             }
         });
 
-        return redirect()->route('admin.products.index')
+        return redirect()->route('admin.products.list')
             ->with('success', 'Cập nhật sản phẩm thành công!');
     }
 

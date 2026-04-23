@@ -36,11 +36,11 @@
 
         {{-- Stats Cards --}}
         <div class="admin-grid">
-            <div class="admin-card">
-                <a href="{{ route('admin.products.index') }}">
+            <div class="admin-card" style="cursor: pointer;" onclick="window.location='{{ route('admin.products.index') }}'">
+                <a>
                     <i class="fas fa-box"></i>
                     <h3>Sản phẩm</h3>
-                    <span>Quản lý danh mục sản phẩm</span>
+                    <p>Quản lý danh mục sản phẩm</p>
                 </a>
             </div>
             <div class="admin-card">

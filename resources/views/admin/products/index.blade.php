@@ -26,7 +26,7 @@
                 <p>Quản lý các danh mục chính của sản phẩm</p>
             </a>
 
-            <a href="#" class="nav-card product-types">
+            <a href="{{ route('admin.subcategories.index') }}" class="nav-card product-types">
                 <i class="fas fa-tags"></i>
                 <h3>Loại sản phẩm</h3>
                 <p>Quản lý các loại sản phẩm theo từng danh mục</p>

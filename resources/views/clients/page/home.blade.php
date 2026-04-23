@@ -22,10 +22,10 @@
                 <div class="product-image-container">
                     <div class="product-images">
                         @if($product->images->isNotEmpty())
-                        <img src="{{ asset($product->images->first()->product_anh) }}"
+                        <img src="{{ asset('uploads/' . $product->images->first()->product_anh) }}"
                              alt="{{ $product->product_name }}" class="main-image">
                         @if($product->images->count() > 1)
-                        <img src="{{ asset($product->images->get(1)->product_anh) }}"
+                        <img src="{{ asset('uploads/' . $product->images->get(1)->product_anh) }}"
                              alt="{{ $product->product_name }}" class="hover-image">
                         @endif
                         @else

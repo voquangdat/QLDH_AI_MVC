@@ -52,7 +52,7 @@ class CategoryController extends Controller
 
         $category->update(['category_name' => $request->category_name]);
 
-        return redirect()->route('admin.categories.index')
+        return redirect()->route('admin.categories.edit', $category)
             ->with('success', 'Cập nhật danh mục thành công!');
     }
 

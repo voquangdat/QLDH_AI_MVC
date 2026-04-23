@@ -11,6 +11,12 @@
         <p>Cập nhật thông tin danh mục sản phẩm</p>
     </div>
 
+    @if (session('success'))
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> {{ session('success') }}
+        </div>
+    @endif
+
     <div class="category-info">
         <h4><i class="fas fa-info-circle"></i> Thông tin hiện tại</h4>
         <div class="info-item">

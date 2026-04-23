@@ -50,12 +50,15 @@ class ProductController extends Controller
     {
         $request->validate([
             'product_name'   => 'required|string|max:255',
+            'product_code'   => 'required|string|max:50|unique:product,product_code',
             'category_id'    => 'required|exists:categories,category_id',
             'subcategory_id' => 'required|exists:subcategories,subcategory_id',
             'product_gia'    => 'required|numeric|min:0',
             'main_image'     => 'required|image|max:5120',
         ], [
             'product_name.required'   => 'Vui lòng nhập tên sản phẩm.',
+            'product_code.required'   => 'Vui lòng nhập mã sản phẩm.',
+            'product_code.unique'     => 'Mã sản phẩm đã tồn tại.',
             'category_id.required'    => 'Vui lòng chọn danh mục.',
             'subcategory_id.required' => 'Vui lòng chọn loại sản phẩm.',
             'product_gia.required'    => 'Vui lòng nhập giá sản phẩm.',
@@ -65,6 +68,7 @@ class ProductController extends Controller
         DB::transaction(function () use ($request) {
             $product = Product::create([
                 'product_name'   => $request->product_name,
+                'product_code'   => strtoupper($request->product_code),
                 'description'    => $request->description,
                 'care_note'      => $request->care_note,
                 'category_id'    => $request->category_id,
@@ -73,13 +77,21 @@ class ProductController extends Controller
                 'product_hot'    => $request->boolean('product_hot'),
             ]);
 
-            // Ảnh chính
+            // Ảnh chính (vị trí 1)
             ProductImage::create([
                 'product_id'  => $product->product_id,
                 'product_anh' => $this->uploadImage($request->file('main_image')),
             ]);
 
-            // Ảnh phụ
+            // Ảnh phụ / hover (vị trí 2)
+            if ($request->hasFile('sub_image')) {
+                ProductImage::create([
+                    'product_id'  => $product->product_id,
+                    'product_anh' => $this->uploadImage($request->file('sub_image')),
+                ]);
+            }
+
+            // Ảnh bổ sung
             if ($request->hasFile('additional_images')) {
                 foreach ($request->file('additional_images') as $img) {
                     ProductImage::create([
@@ -120,12 +132,15 @@ class ProductController extends Controller
     {
         $request->validate([
             'product_name'   => 'required|string|max:255',
+            'product_code'   => 'required|string|max:50|unique:product,product_code,' . $product->product_id . ',product_id',
             'category_id'    => 'required|exists:categories,category_id',
             'subcategory_id' => 'required|exists:subcategories,subcategory_id',
             'product_gia'    => 'required|numeric|min:0',
             'main_image'     => 'nullable|image|max:5120',
         ], [
             'product_name.required'   => 'Vui lòng nhập tên sản phẩm.',
+            'product_code.required'   => 'Vui lòng nhập mã sản phẩm.',
+            'product_code.unique'     => 'Mã sản phẩm đã tồn tại.',
             'category_id.required'    => 'Vui lòng chọn danh mục.',
             'subcategory_id.required' => 'Vui lòng chọn loại sản phẩm.',
             'product_gia.required'    => 'Vui lòng nhập giá sản phẩm.',
@@ -134,6 +149,7 @@ class ProductController extends Controller
         DB::transaction(function () use ($request, $product) {
             $product->update([
                 'product_name'   => $request->product_name,
+                'product_code'   => strtoupper($request->product_code),
                 'description'    => $request->description,
                 'care_note'      => $request->care_note,
                 'category_id'    => $request->category_id,
@@ -146,6 +162,13 @@ class ProductController extends Controller
                 ProductImage::create([
                     'product_id'  => $product->product_id,
                     'product_anh' => $this->uploadImage($request->file('main_image')),
+                ]);
+            }
+
+            if ($request->hasFile('sub_image')) {
+                ProductImage::create([
+                    'product_id'  => $product->product_id,
+                    'product_anh' => $this->uploadImage($request->file('sub_image')),
                 ]);
             }
 
@@ -169,10 +192,18 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        $product->delete();
+        DB::transaction(function () use ($product) {
+            // Xóa inventory → variants → images → product
+            foreach ($product->variants as $variant) {
+                $variant->inventory?->delete();
+                $variant->delete();
+            }
+            $product->images()->delete();
+            $product->delete();
+        });
 
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Xóa sản phẩm thành công!');
+        return redirect()->route('admin.products.list')
+            ->with('success', 'Xóa sản phẩm "' . $product->product_name . '" thành công!');
     }
 
     // AJAX: lấy subcategory theo category

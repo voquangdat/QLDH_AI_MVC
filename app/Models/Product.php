@@ -12,8 +12,8 @@ class Product extends Model
     public $incrementing = true;
 
     protected $fillable = [
-        'product_name', 'description', 'care_note', 'category_id',
-        'subcategory_id', 'product_gia', 'product_hot'
+        'product_name', 'product_code', 'description', 'care_note',
+        'category_id', 'subcategory_id', 'product_gia', 'product_hot'
     ];
 
     protected $casts = [

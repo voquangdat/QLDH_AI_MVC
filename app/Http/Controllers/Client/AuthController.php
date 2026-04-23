@@ -13,9 +13,9 @@ class AuthController extends Controller
     // ===== ĐĂNG NHẬP =====
     public function showLogin()
     {
-        if (Auth::check() && !Auth::user()->isAdmin()) {
-            return redirect()->route('home');
-        }
+        // if (Auth::check() && !Auth::user()->isAdmin()) {
+        //     return redirect()->route('home');
+        // }
         return view('clients.page.login');
     }
 
@@ -38,12 +38,12 @@ class AuthController extends Controller
             $user = Auth::user();
 
             // Chặn tài khoản admin đăng nhập vào trang user
-            if ($user->isAdmin()) {
-                Auth::logout();
-                return back()->withErrors([
-                    'email' => 'Tài khoản admin vui lòng đăng nhập tại trang quản trị.',
-                ])->onlyInput('email');
-            }
+            // if ($user->isAdmin()) {
+            //     Auth::logout();
+            //     return back()->withErrors([
+            //         'email' => 'Tài khoản admin vui lòng đăng nhập tại trang quản trị.',
+            //     ])->onlyInput('email');
+            // }
 
             if (!$user->is_active) {
                 Auth::logout();
@@ -62,9 +62,9 @@ class AuthController extends Controller
     // ===== ĐĂNG KÝ =====
     public function showRegister()
     {
-        if (Auth::check() && !Auth::user()->isAdmin()) {
-            return redirect()->route('home');
-        }
+        // if (Auth::check() && !Auth::user()->isAdmin()) {
+        //     return redirect()->route('home');
+        // }
         return view('clients.page.register');
     }
 

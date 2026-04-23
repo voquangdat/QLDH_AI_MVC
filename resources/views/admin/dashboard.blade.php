@@ -70,7 +70,7 @@
                     <i class="fas fa-box"></i>
                     <span>Quản lý Sản phẩm</span>
                 </a>
-                <a href="#" class="menu-item">
+                <a href="{{ route('admin.categories.index') }}" class="menu-item">
                     <i class="fas fa-tags"></i>
                     <span>Quản lý Danh mục</span>
                 </a>

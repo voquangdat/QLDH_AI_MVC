@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
 
 // Các trang cần middleware admin
 Route::middleware('admin')->group(function () {
@@ -12,6 +13,12 @@ Route::middleware('admin')->group(function () {
 
     // Danh mục
     Route::resource('categories', CategoryController::class)->names('categories');
+
+    // Sản phẩm
+    Route::get('products/list', [ProductController::class, 'list'])->name('products.list');
+    Route::get('products/subcategories', [ProductController::class, 'getSubcategories'])->name('products.subcategories');
+    Route::delete('products/images/destroy', [ProductController::class, 'destroyImage'])->name('products.images.destroy');
+    Route::resource('products', ProductController::class)->names('products');
 });
 
 // Auth (không cần middleware)

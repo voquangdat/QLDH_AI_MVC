@@ -37,9 +37,11 @@
         {{-- Stats Cards --}}
         <div class="admin-grid">
             <div class="admin-card">
-                <i class="fas fa-box"></i>
-                <h3>Sản phẩm</h3>
-                <p>Quản lý danh mục sản phẩm</p>
+                <a href="{{ route('admin.products.index') }}">
+                    <i class="fas fa-box"></i>
+                    <h3>Sản phẩm</h3>
+                    <span>Quản lý danh mục sản phẩm</span>
+                </a>
             </div>
             <div class="admin-card">
                 <i class="fas fa-shopping-cart"></i>

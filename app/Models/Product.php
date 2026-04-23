@@ -33,6 +33,10 @@ class Product extends Model
     {
         return $this->belongsTo(Subcategory::class, 'subcategory_id', 'subcategory_id');
     }
+    public function color()
+    {
+        return $this->belongsTo(Color::class, 'color_id', 'color_id');
+    }
 
     public function images()
     {

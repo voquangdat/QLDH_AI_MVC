@@ -15,7 +15,7 @@
             <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Thêm Danh mục
             </a>
-            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
+            <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Quay lại
             </a>
         </div>

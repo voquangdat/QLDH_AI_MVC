@@ -21,8 +21,10 @@ Route::get('/danh-muc', [\App\Http\Controllers\Client\CategoryController::class,
 Route::get('/danh-muc/{id}', function () { return redirect('/'); })->name('category.show');
 
 // Sản phẩm
-Route::get('/san-pham', function () { return redirect('/'); })->name('product.index');
-Route::get('/san-pham/{id}', function () { return redirect('/'); })->name('product.show');
+// Route::get('/san-pham', function () { return redirect('/'); })->name('product.index');
+// Route::get('/san-pham/{id}', function () { return redirect('/'); })->name('product.show');
+Route::get('/san-pham/{id}', [\App\Http\Controllers\Client\ProductController::class, 'show'])
+    ->name('product.show');
 
 // Giỏ hàng
 Route::get('/gio-hang', function () { return redirect('/'); })->name('cart.index');

@@ -68,7 +68,7 @@
                     <i class="fas fa-users"></i>
                     <span>Quản lý Khách hàng</span>
                 </a>
-                <a href="#" class="menu-item">
+                <a href="{{ route('admin.products.list') }}" class="menu-item">
                     <i class="fas fa-box"></i>
                     <span>Quản lý Sản phẩm</span>
                 </a>

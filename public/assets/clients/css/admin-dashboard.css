@@ -679,3 +679,29 @@
     background: #e2e3e5;
     color: #383d41;
 }
+
+.product-management-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.back-to-dashboard {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #4a4a5a;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    transition: background 0.2s;
+}
+
+.back-to-dashboard:hover {
+    background: #333344;
+    color: #fff;
+}

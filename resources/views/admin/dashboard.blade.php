@@ -53,7 +53,7 @@
                 <h3>Báo cáo Thống kê</h3>
                 <p>Doanh thu và phân tích kinh doanh</p>
             </div>
-            <div class="admin-card">
+            <div class="admin-card" style="cursor: pointer;" onclick="window.location='{{ route('admin.inventory.index') }}'">
                 <i class="fas fa-warehouse"></i>
                 <h3>Tồn kho</h3>
                 <p>Theo dõi và quản lý hàng tồn kho</p>
@@ -76,7 +76,7 @@
                     <i class="fas fa-tags"></i>
                     <span>Quản lý Danh mục</span>
                 </a>
-                <a href="#" class="menu-item">
+                <a href="{{ route('admin.inventory.index') }}" class="menu-item">
                     <i class="fas fa-warehouse"></i>
                     <span>Quản lý Tồn kho</span>
                 </a>

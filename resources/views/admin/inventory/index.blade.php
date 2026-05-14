@@ -27,7 +27,7 @@
                 <h3>Chi tiết sản phẩm tồn kho</h3>
                 <p>Quản lý sản phẩm theo từng biến thể</p>
             </a>
-        </div>
+        </div> 
     </div>
 
 </div>

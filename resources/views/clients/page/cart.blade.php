@@ -78,7 +78,7 @@
                                 <td><span>{{ $item->quantity }}</span></td>
                                 <td><p>{{ number_format($product->product_gia) }}<sup>đ</sup></p></td>
                                 <td>
-                                    <form action="{{ route('cart.destroy', $item->cart_id) }}"
+                                    <form action="{{ route('cart.destroy', $item->variant_id) }}"
                                           method="POST" style="display:inline"
                                           onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
                                         @csrf
@@ -135,7 +135,7 @@
 
                     <div class="cart-content-right-button">
                         <button onclick="window.location.href='{{ route('home') }}'">TIẾP TỤC MUA SẮM</button>
-                        <a href="#"><button>THANH TOÁN</button></a>
+                        <a href="{{ route('delivery.index') }}"><button>THANH TOÁN</button></a>
                     </div>
 
                     @guest

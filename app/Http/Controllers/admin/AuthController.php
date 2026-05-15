@@ -14,7 +14,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         // Nếu đã đăng nhập rồi thì vào thẳng dashboard
-        if (Auth::check() && Auth::user()->isAdmin()) {
+        if (Auth::guard('admin')->check() && Auth::guard('admin')->user()->isAdmin()) {
             return redirect()->route('admin.dashboard');
         }
         return view('admin.auth.login');
@@ -36,18 +36,18 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $remember    = $request->boolean('remember');
 
-        if (Auth::attempt($credentials, $remember)) {
-            $user = Auth::user();
+        if (Auth::guard('admin')->attempt($credentials, $remember)) {
+            $user = Auth::guard('admin')->user();
 
             if (!$user->isAdmin()) {
-                Auth::logout();
+                Auth::guard('admin')->logout();
                 return back()->withErrors([
                     'email' => 'Bạn không có quyền truy cập trang quản trị.',
                 ])->onlyInput('email');
             }
 
             if (!$user->is_active) {
-                Auth::logout();
+                Auth::guard('admin')->logout();
                 return back()->withErrors([
                     'email' => 'Tài khoản của bạn đã bị vô hiệu hóa.',
                 ]);
@@ -65,8 +65,7 @@ class AuthController extends Controller
     // Đăng xuất
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
+        Auth::guard('admin')->logout();
         $request->session()->regenerateToken();
         return redirect()->route('admin.login');
     }

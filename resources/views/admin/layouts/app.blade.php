@@ -14,7 +14,7 @@
         <div class="container">
             <h1><i class="fas fa-tachometer-alt"></i> @yield('page-title', 'Admin Panel')</h1>
             <div class="admin-user-info">
-                <span>Xin chào, <strong>{{ auth()->user()->fullname }}</strong></span>
+                <span>Xin chào, <strong>{{ auth('admin')->user()->fullname }}</strong></span>
                 <form method="POST" action="{{ route('admin.logout') }}" style="margin:0;">
                     @csrf
                     <button type="submit" class="logout-btn">

@@ -183,6 +183,33 @@ $(function() {
         $('.stock-hint').text('Còn lại: ' + (typeof stock === 'number' ? stock : 0));
     });
 
+    function showCartToast(message, isSuccess) {
+        var existing = $('#cart-toast');
+        if (existing.length) existing.remove();
+
+        var bgColor = isSuccess ? '#2ecc71' : '#e74c3c';
+        var icon    = isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+        $('body').append(
+            '<div id="cart-toast" style="' +
+                'position:fixed;top:80px;right:20px;z-index:99999;' +
+                'background:' + bgColor + ';color:#fff;' +
+                'padding:12px 18px;border-radius:6px;' +
+                'font-size:13px;font-family:sans-serif;' +
+                'display:flex;align-items:center;gap:8px;' +
+                'box-shadow:0 4px 12px rgba(0,0,0,0.2);' +
+                'animation:slideInRight .3s ease;' +
+            '">' +
+                '<i class="fas ' + icon + '"></i>' +
+                '<span>' + message + '</span>' +
+            '</div>'
+        );
+
+        setTimeout(function() {
+            $('#cart-toast').fadeOut(300, function() { $(this).remove(); });
+        }, 2500);
+    }
+
     function addToCart(variantId, quantity, callback) {
         $.ajax({
             url: '{{ route('cart.store') }}',
@@ -194,27 +221,48 @@ $(function() {
             },
             success: function(res) {
                 if (res.success) {
-                    refreshMiniCart();
+                    // Hiện toast ngay lập tức, không cần chờ mini-cart refresh
+                    showCartToast('Đã thêm vào giỏ hàng!', true);
+                    // Refresh mini-cart sau đó
+                    refreshMiniCart(function() {
+                        openMiniCartBriefly();
+                    });
                     callback(true, res);
                 } else {
+                    showCartToast(res.message || 'Có lỗi xảy ra!', false);
                     callback(false, res);
                 }
             },
             error: function(xhr) {
                 var res = xhr.responseJSON || {};
-                if (xhr.status === 401 && res.redirect) {
-                    window.location.href = res.redirect;
-                } else {
-                    callback(false, res);
-                }
+                showCartToast(res.message || 'Có lỗi xảy ra!', false);
+                callback(false, res);
             }
         });
     }
 
-    function refreshMiniCart() {
-        $.get('{{ route('cart.mini') }}', function(res) {
-            $('#mini-cart-wrapper').replaceWith(res.html);
+    function refreshMiniCart(done) {
+        $.ajax({
+            url: '{{ route('cart.mini') }}',
+            method: 'GET',
+            success: function(res) {
+                if (res.html) {
+                    $('#mini-cart-wrapper').replaceWith(res.html);
+                }
+                if (typeof done === 'function') done();
+            },
+            error: function() {
+                // Mini-cart refresh thất bại nhưng không ảnh hưởng toast
+                if (typeof done === 'function') done();
+            }
         });
+    }
+
+    function openMiniCartBriefly() {
+        var $dropdown = $('#mini-cart-dropdown');
+        if (!$dropdown.length) return;
+        $dropdown.addClass('open');
+        setTimeout(function() { $dropdown.removeClass('open'); }, 2500);
     }
 
     // Nút MUA NGAY

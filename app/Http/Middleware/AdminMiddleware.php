@@ -12,18 +12,18 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('admin')->check()) {
             return redirect()->route('admin.login');
         }
-        $user = Auth::user();
+        $user = Auth::guard('admin')->user();
         if (!$user->isAdmin()) {
-            Auth::logout();
+            Auth::guard('admin')->logout();
             return redirect()->route('admin.login')
                 ->withErrors(['email' => 'Bạn không có quyền truy cập.']);
         }
 
         if (!$user->is_active) {
-            Auth::logout();
+            Auth::guard('admin')->logout();
             return redirect()->route('admin.login')
                 ->withErrors(['email' => 'Tài khoản đã bị vô hiệu hóa.']);
         }

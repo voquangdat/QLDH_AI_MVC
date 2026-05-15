@@ -86,10 +86,7 @@
                     </li>
 
                     <li>
-                        <a href="{{ route('cart.index') }}">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count">{{ session('cart_count', 0) }}</span>
-                        </a>
+                        <x-mini-cart />
                     </li>
                 </ul>
             </div>

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\AuthController;
+use App\Http\Controllers\Client\CartController;
 
 // Trang chủ
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -27,7 +28,10 @@ Route::get('/san-pham/{id}', [\App\Http\Controllers\Client\ProductController::cl
     ->name('product.show');
 
 // Giỏ hàng
-Route::get('/gio-hang', function () { return redirect('/'); })->name('cart.index');
+Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
+Route::post('/gio-hang/them', [CartController::class, 'store'])->name('cart.store');
+Route::get('/gio-hang/mini', [CartController::class, 'mini'])->name('cart.mini');
+Route::delete('/gio-hang/xoa/{cartId}', [CartController::class, 'destroy'])->name('cart.destroy');
 
 // Đơn hàng
 Route::get('/don-hang', function () { return redirect('/'); })->name('orders');

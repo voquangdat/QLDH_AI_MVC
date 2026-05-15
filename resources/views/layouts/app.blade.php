@@ -26,6 +26,22 @@
 
     <script src="{{ asset('assets/clients/js/script.js') }}"></script>
     <script src="{{ asset('assets/clients/js/footer.js') }}"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            var trigger  = document.getElementById('mini-cart-trigger');
+            var wrapper  = document.getElementById('mini-cart-wrapper');
+            var dropdown = document.getElementById('mini-cart-dropdown');
+
+            if (!trigger || !dropdown) return;
+
+            if (trigger.contains(e.target)) {
+                e.preventDefault();
+                dropdown.classList.toggle('open');
+            } else if (wrapper && !wrapper.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+    </script>
     @stack('scripts')
 </body>
 

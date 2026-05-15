@@ -92,10 +92,10 @@
                 <div class="product-content-right-product-button">
                     <button class="add-cart-btn">
                         <i class="fas fa-shopping-cart"></i>
-                        <p>MUA HÀNG</p>
+                        <p>MUA NGAY</p>
                     </button>
                     <button>
-                        <p>TÌM TẠI CỬA HÀNG</p>
+                        <p>THÊM VÀO GIỎ HÀNG</p>
                     </button>
                 </div>
 
@@ -183,17 +183,82 @@ $(function() {
         $('.stock-hint').text('Còn lại: ' + (typeof stock === 'number' ? stock : 0));
     });
 
+    function addToCart(variantId, quantity, callback) {
+        $.ajax({
+            url: '{{ route('cart.store') }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                variant_id: variantId,
+                quantity: quantity,
+            },
+            success: function(res) {
+                if (res.success) {
+                    refreshMiniCart();
+                    callback(true, res);
+                } else {
+                    callback(false, res);
+                }
+            },
+            error: function(xhr) {
+                var res = xhr.responseJSON || {};
+                if (xhr.status === 401 && res.redirect) {
+                    window.location.href = res.redirect;
+                } else {
+                    callback(false, res);
+                }
+            }
+        });
+    }
+
+    function refreshMiniCart() {
+        $.get('{{ route('cart.mini') }}', function(res) {
+            $('#mini-cart-wrapper').replaceWith(res.html);
+        });
+    }
+
+    // Nút MUA NGAY
     $('.add-cart-btn').on('click', function() {
         if (!selectedVariantId) {
             $('.size-alert').text('Vui lòng chọn size*');
             return;
         }
-        var $root = $(this).closest('.product-content-right');
-        var sanpham_id  = $root.find('.sanpham_id').val();
-        var sanpham_gia = $root.find('.sanpham_gia').val();
-        var quantitys   = Math.max(1, parseInt($root.find('.quantitys').val() || '1', 10));
+        var quantity = Math.max(1, parseInt($('.quantitys').val() || '1', 10));
+        var $btn = $(this);
+        $btn.prop('disabled', true).find('p').text('Đang xử lý...');
 
-        alert('Chức năng giỏ hàng đang được phát triển!');
+        addToCart(selectedVariantId, quantity, function(success, res) {
+            if (success) {
+                window.location.href = '{{ route('cart.index') }}';
+            } else {
+                $('.size-alert').text(res.message || 'Có lỗi xảy ra!');
+                $btn.prop('disabled', false).find('p').text('MUA NGAY');
+            }
+        });
+    });
+
+    // Nút THÊM VÀO GIỎ HÀNG
+    $('.add-cart-btn').closest('.product-content-right-product-button')
+        .find('button:last').on('click', function() {
+        if (!selectedVariantId) {
+            $('.size-alert').text('Vui lòng chọn size*');
+            return;
+        }
+        var quantity = Math.max(1, parseInt($('.quantitys').val() || '1', 10));
+        var $btn = $(this);
+        $btn.prop('disabled', true).find('p').text('Đang thêm...');
+
+        addToCart(selectedVariantId, quantity, function(success, res) {
+            if (success) {
+                $btn.find('p').text('Đã thêm ✓');
+                setTimeout(function() {
+                    $btn.prop('disabled', false).find('p').text('THÊM VÀO GIỎ HÀNG');
+                }, 2000);
+            } else {
+                $('.size-alert').text(res.message || 'Có lỗi xảy ra!');
+                $btn.prop('disabled', false).find('p').text('THÊM VÀO GIỎ HÀNG');
+            }
+        });
     });
 });
 </script>

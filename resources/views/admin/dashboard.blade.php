@@ -43,7 +43,7 @@
                     <p>Quản lý danh mục sản phẩm</p>
                 </a>
             </div>
-            <div class="admin-card">
+            <div class="admin-card" style="cursor: pointer;" onclick="window.location='{{ route('admin.orders.index') }}'">
                 <i class="fas fa-shopping-cart"></i>
                 <h3>Đơn hàng</h3>
                 <p>Theo dõi và xử lý đơn hàng</p>
@@ -80,7 +80,7 @@
                     <i class="fas fa-warehouse"></i>
                     <span>Quản lý Tồn kho</span>
                 </a>
-                <a href="#" class="menu-item">
+                <a href="{{ route('admin.orders.index') }}" class="menu-item">
                     <i class="fas fa-shopping-cart"></i>
                     <span>Quản lý Đơn hàng</span>
                 </a>

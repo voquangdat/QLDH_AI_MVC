@@ -104,14 +104,55 @@ class Order extends Model
         return $query->where('payment_status', 'unpaid');
     }
 
+    // ===== Scopes =====
+    public function scopeCancelled($query)
+    {
+        return $query->where('order_status', 'cancelled');
+    }
+
+    public function scopeProcessing($query)
+    {
+        return $query->where('order_status', 'processing');
+    }
+
     // ===== Helpers =====
-    public function isPending()
+    public function isPending(): bool
     {
         return $this->order_status === 'pending';
     }
 
-    public function isDelivered()
+    public function isConfirmed(): bool
+    {
+        return $this->order_status === 'confirmed';
+    }
+
+    public function isProcessing(): bool
+    {
+        return $this->order_status === 'processing';
+    }
+
+    public function isDelivered(): bool
     {
         return $this->order_status === 'delivered';
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->order_status === 'cancelled';
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    public function canBeCancelledByCustomer(): bool
+    {
+        return in_array($this->order_status, ['pending', 'confirmed']);
+    }
+
+    public function deliveryInfo(): ?array
+    {
+        return $this->notes ? json_decode($this->notes, true) : null;
     }
 }

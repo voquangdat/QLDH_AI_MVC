@@ -5,6 +5,7 @@ use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\AuthController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\DeliveryController;
+use App\Http\Controllers\Client\PaymentController;
 
 // Trang chủ
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -38,8 +39,15 @@ Route::delete('/gio-hang/xoa/{variantId}', [CartController::class, 'destroy'])->
 Route::get('/dat-hang', [DeliveryController::class, 'index'])->name('delivery.index');
 Route::post('/dat-hang', [DeliveryController::class, 'store'])->name('delivery.store');
 
+// Thanh toán
+Route::get('/thanh-toan/{orderId}',              [PaymentController::class, 'show'])->name('payment.show');
+Route::post('/thanh-toan/{orderId}',             [PaymentController::class, 'process'])->name('payment.process');
+Route::get('/thanh-toan/{orderId}/thanh-cong',   [PaymentController::class, 'success'])->name('payment.success');
+
 // Đơn hàng
 Route::get('/don-hang', function () { return redirect('/'); })->name('orders');
+Route::get('/don-hang/{orderId}', [PaymentController::class, 'detail'])->name('order.detail');
+Route::get('/don-hang-khach', [PaymentController::class, 'guestDetail'])->name('order.guest-detail');
 
 // Tài khoản
 Route::get('/profile', function () { return redirect('/'); })->name('profile');

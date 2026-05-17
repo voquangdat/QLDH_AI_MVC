@@ -4,17 +4,17 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
-use App\Models\Order;
-use App\Models\OrderDetail;
 use App\Models\ShippingAddress;
 use App\Models\Variant;
+use App\Services\OrderService;
 use App\Support\GuestCartItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class DeliveryController extends Controller
 {
+    public function __construct(private OrderService $orderService) {}
+
     private function getCartItems()
     {
         if (Auth::check()) {
@@ -72,70 +72,43 @@ class DeliveryController extends Controller
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng của bạn đang trống.');
         }
 
-        $subtotal    = $cartItems->sum(fn($item) => $item->subtotal());
-        $shippingFee = $subtotal >= 2000000 ? 0 : 30000;
-        $total       = $subtotal + $shippingFee;
-
-        // Địa chỉ giao hàng sẽ được lưu vào notes cho cả guest lẫn user
-        $deliveryInfo = json_encode([
+        $deliveryData = [
             'name'     => $request->customer_name,
             'phone'    => $request->customer_phone,
             'province' => $request->customer_province,
             'district' => $request->customer_district,
             'ward'     => $request->customer_ward,
             'address'  => $request->customer_address,
-        ], JSON_UNESCAPED_UNICODE);
+        ];
 
-        DB::transaction(function () use ($request, $cartItems, $subtotal, $shippingFee, $total, $deliveryInfo) {
-            $order = Order::create([
-                'user_id'         => Auth::check() ? Auth::id() : null,
-                'order_number'    => 'ORD-' . strtoupper(uniqid()),
-                'order_status'    => 'pending',
-                'payment_status'  => 'unpaid',
-                'subtotal'        => $subtotal,
-                'shipping_fee'    => $shippingFee,
-                'discount_amount' => 0,
-                'tax'             => 0,
-                'total_amount'    => $total,
-                'notes'           => $deliveryInfo,
+        $result = $this->orderService->createOrder(
+            $deliveryData,
+            $cartItems,
+            Auth::check() ? Auth::id() : null
+        );
+
+        if (!$result['success']) {
+            return back()->with('error', $result['message']);
+        }
+
+        // Lưu địa chỉ cho user đã đăng nhập và dọn giỏ hàng
+        if (Auth::check()) {
+            ShippingAddress::create([
+                'user_id'      => Auth::id(),
+                'full_name'    => $request->customer_name,
+                'phone_number' => $request->customer_phone,
+                'province'     => $request->customer_province,
+                'district'     => $request->customer_district,
+                'ward'         => $request->customer_ward,
+                'detail'       => $request->customer_address,
+                'is_default'   => false,
             ]);
 
-            foreach ($cartItems as $item) {
-                $product = $item->variant->product;
-                $image   = $product->images->first();
+            Cart::where('users_id', Auth::id())->delete();
+        } else {
+            session()->forget('guest_cart');
+        }
 
-                OrderDetail::create([
-                    'order_id'     => $order->id,
-                    'product_id'   => $product->product_id,
-                    'variant_id'   => $item->variant_id,
-                    'quantity'     => $item->quantity,
-                    'product_name' => $product->product_name,
-                    'product_gia'  => $product->product_gia,
-                    'product_anh'  => $image->product_anh ?? null,
-                    'subtotal'     => $item->subtotal(),
-                ]);
-            }
-
-            // Lưu địa chỉ cho user đã đăng nhập
-            if (Auth::check()) {
-                ShippingAddress::create([
-                    'user_id'      => Auth::id(),
-                    'full_name'    => $request->customer_name,
-                    'phone_number' => $request->customer_phone,
-                    'province'     => $request->customer_province,
-                    'district'     => $request->customer_district,
-                    'ward'         => $request->customer_ward,
-                    'detail'       => $request->customer_address,
-                    'is_default'   => false,
-                ]);
-
-                Cart::where('users_id', Auth::id())->delete();
-            } else {
-                session()->forget('guest_cart');
-            }
-        });
-
-        return redirect()->route('home')
-            ->with('success', 'Đặt hàng thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.');
+        return redirect()->route('payment.show', $result['order_id']);
     }
 }

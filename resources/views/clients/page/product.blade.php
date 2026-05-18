@@ -68,12 +68,17 @@
                     <div class="size">
                         @if ($product->variants->count())
                             @foreach ($product->variants as $variant)
-                            <div class="size-item">
+                                @php $stock = max(0, $variant->inventory?->soluong_co_the_ban ?? 0); @endphp
+                            <div class="size-item{{ $stock <= 0 ? ' size-item--out' : '' }}">
                                 <input class="size-item-input" name="size-item" type="radio"
                                     value="{{ $variant->size?->product_size }}"
                                     data-bienthe-id="{{ $variant->variant_id }}"
-                                    data-stock="{{ $variant->inventory?->soluong_co_the_ban ?? 0 }}">
+                                    data-stock="{{ $stock }}"
+                                    {{ $stock <= 0 ? 'disabled' : '' }}>
                                 <span>{{ $variant->size?->product_size }}</span>
+                                @if ($stock <= 0)
+                                    <small style="display:block;font-size:10px;color:#e74c3c;text-align:center;">Hết</small>
+                                @endif
                             </div>
                             @endforeach
                         @else
@@ -86,7 +91,7 @@
                         <input class="quantitys" type="number" min="1" value="1">
                     </div>
                     <p class="size-alert" style="color: red;"></p>
-                    <p class="stock-hint" style="margin-top:6px;color:#555;"></p>
+                    <p class="stock-hint" style="margin-top:6px;color:#555;font-size:13px;"></p>
                 </div>
 
                 <div class="product-content-right-product-button">
@@ -178,9 +183,19 @@ $(function() {
 
     $(document).on('change', '.size-item-input', function() {
         selectedVariantId = $(this).data('bienthe-id');
-        var stock = $(this).data('stock');
+        var stock = parseInt($(this).data('stock')) || 0;
         $('.size-alert').text('');
-        $('.stock-hint').text('Còn lại: ' + (typeof stock === 'number' ? stock : 0));
+
+        if (stock <= 0) {
+            $('.stock-hint').html('<span style="color:#e74c3c;font-weight:600;">Hết hàng</span>');
+        } else if (stock <= 5) {
+            $('.stock-hint').html('<span style="color:#e67e22;font-weight:600;">Còn lại: ' + stock + ' sản phẩm (sắp hết)</span>');
+        } else {
+            $('.stock-hint').html('<span style="color:#27ae60;">Còn lại: ' + stock + ' sản phẩm</span>');
+        }
+
+        // Giới hạn số lượng người dùng có thể nhập
+        $('.quantitys').attr('max', stock).val(Math.min(parseInt($('.quantitys').val()) || 1, stock));
     });
 
     function showCartToast(message, isSuccess) {

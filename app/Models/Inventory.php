@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Inventory extends Model
 {
@@ -62,5 +63,17 @@ class Inventory extends Model
     public function recalculate(): void
     {
         $this->soluong_co_the_ban = max(0, $this->soluong_ton - $this->soluong_dat);
+    }
+
+    /**
+     * Đồng bộ soluong_co_the_ban = GREATEST(soluong_ton - soluong_dat, 0) thẳng DB.
+     * Gọi sau mỗi lần thay đổi soluong_ton hoặc soluong_dat qua raw query.
+     */
+    public static function syncAvailable(int $variantId): void
+    {
+        static::where('variant_id', $variantId)
+            ->update([
+                'soluong_co_the_ban' => DB::raw('GREATEST(soluong_ton - soluong_dat, 0)'),
+            ]);
     }
 }

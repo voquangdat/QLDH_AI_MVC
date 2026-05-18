@@ -348,9 +348,46 @@
     </div>
 
     {{-- Phân trang --}}
-    <div style="margin-top:16px;display:flex;justify-content:center;">
-        {{ $orders->links() }}
+    @if ($orders->lastPage() > 1)
+    <div style="margin-top:20px;">
+        <nav>
+            <ul class="pagination justify-content-center">
+
+                {{-- Đầu / Trước --}}
+                @if ($orders->onFirstPage())
+                    <li class="page-item disabled"><span class="page-link">«</span></li>
+                    <li class="page-item disabled"><span class="page-link">Trước</span></li>
+                @else
+                    <li class="page-item"><a class="page-link" href="{{ $orders->url(1) }}">«</a></li>
+                    <li class="page-item"><a class="page-link" href="{{ $orders->previousPageUrl() }}">Trước</a></li>
+                @endif
+
+                {{-- Số trang --}}
+                @for ($i = max(1, $orders->currentPage() - 2); $i <= min($orders->lastPage(), $orders->currentPage() + 2); $i++)
+                    <li class="page-item {{ $i == $orders->currentPage() ? 'active' : '' }}">
+                        <a class="page-link" href="{{ $orders->url($i) }}">{{ $i }}</a>
+                    </li>
+                @endfor
+
+                {{-- Sau / Cuối --}}
+                @if ($orders->hasMorePages())
+                    <li class="page-item"><a class="page-link" href="{{ $orders->nextPageUrl() }}">Sau</a></li>
+                    <li class="page-item"><a class="page-link" href="{{ $orders->url($orders->lastPage()) }}">»</a></li>
+                @else
+                    <li class="page-item disabled"><span class="page-link">Sau</span></li>
+                    <li class="page-item disabled"><span class="page-link">»</span></li>
+                @endif
+
+            </ul>
+        </nav>
+        <div class="text-center" style="margin-top:8px;">
+            <small style="color:#6c757d;">
+                Hiển thị {{ $orders->firstItem() }}–{{ $orders->lastItem() }}
+                trong tổng số {{ $orders->total() }} đơn hàng
+            </small>
+        </div>
     </div>
+    @endif
 
 </div>
 @endsection

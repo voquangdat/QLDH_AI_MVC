@@ -48,6 +48,7 @@ Route::middleware('admin')->group(function () {
     Route::get('inventory/list', [InventoryController::class, 'list'])->name('inventory.list');
     Route::get('inventory/detail', [InventoryController::class, 'detail'])->name('inventory.detail');
     Route::post('inventory/update-stock', [InventoryController::class, 'updateStock'])->name('inventory.update-stock');
+    Route::post('inventory/init-stock',   [InventoryController::class, 'initStock'])  ->name('inventory.init-stock');
 });
 
 // Auth (không cần middleware)

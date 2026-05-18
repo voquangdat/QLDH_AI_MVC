@@ -59,7 +59,7 @@ class OrderService
                         continue;
                     }
 
-                    $available = $inventory->soluong_ton - $inventory->soluong_dat;
+                    $available = $inventory->availableQuantity();
 
                     if ($available < $item->quantity) {
                         $productName = $item->variant->product->product_name;
@@ -147,7 +147,8 @@ class OrderService
     // ==================== QUẢN LÝ TRẠNG THÁI (ADMIN) ====================
 
     /**
-     * Xác nhận đơn hàng: kiểm tra tồn kho, giữ hàng, chuyển sang 'confirmed'.
+     * Xác nhận đơn hàng: kiểm tra tồn kho, chuyển sang 'confirmed'.
+     * Không thay đổi inventory — chỉ kiểm tra soluong_co_the_ban đủ không.
      */
     public function confirmOrder(int $orderId, ?int $adminId = null): array
     {
@@ -165,7 +166,7 @@ class OrderService
                     return ['success' => false, 'message' => 'Không tìm thấy chi tiết đơn hàng'];
                 }
 
-                // Kiểm tra tồn kho
+                // Kiểm tra tồn kho khả dụng
                 $insufficient = [];
                 foreach ($details as $detail) {
                     $inventory = Inventory::lockForUpdate()
@@ -177,9 +178,8 @@ class OrderService
                         continue;
                     }
 
-                    $available = $inventory->soluong_ton - $inventory->soluong_dat;
-                    if ($available < $detail->quantity) {
-                        $insufficient[] = "Variant #{$detail->variant_id}: Cần {$detail->quantity}, còn {$available}";
+                    if ($inventory->soluong_co_the_ban < $detail->quantity) {
+                        $insufficient[] = "Variant #{$detail->variant_id}: Cần {$detail->quantity}, còn {$inventory->soluong_co_the_ban}";
                     }
                 }
 
@@ -187,14 +187,18 @@ class OrderService
                     return ['success' => false, 'message' => 'Không đủ hàng trong kho: ' . implode('; ', $insufficient)];
                 }
 
-                // Giữ hàng (tăng soluong_dat)
+                // Xác nhận: xuất hàng khỏi kho, ghi nhận đang đặt, giảm có thể bán
                 foreach ($details as $detail) {
                     Inventory::where('variant_id', $detail->variant_id)
-                        ->increment('soluong_dat', $detail->quantity);
+                        ->update([
+                            'soluong_ton'        => DB::raw("GREATEST(soluong_ton - {$detail->quantity}, 0)"),
+                            'soluong_dat'        => DB::raw("soluong_dat + {$detail->quantity}"),
+                            'soluong_co_the_ban' => DB::raw("GREATEST(soluong_co_the_ban - {$detail->quantity}, 0)"),
+                        ]);
                 }
 
                 $order->update(['order_status' => 'confirmed']);
-                $this->recordStatusHistory($orderId, 'pending', 'confirmed', 'Xác nhận đơn hàng và giữ hàng', $adminId);
+                $this->recordStatusHistory($orderId, 'pending', 'confirmed', 'Xác nhận đơn hàng', $adminId);
 
                 return ['success' => true, 'message' => 'Xác nhận đơn hàng thành công'];
             });
@@ -227,7 +231,8 @@ class OrderService
     }
 
     /**
-     * Hoàn tất giao hàng: xuất kho, giải phóng soluong_dat, chuyển sang 'delivered'.
+     * Hoàn tất giao hàng: tăng soluong_dat theo số lượng đã giao, chuyển sang 'delivered'.
+     * soluong_ton không thay đổi — admin tự quản lý khi nhập hàng mới.
      */
     public function deliverOrder(int $orderId, ?int $adminId = null): array
     {
@@ -242,23 +247,18 @@ class OrderService
                 $oldStatus = $order->order_status;
                 $details   = OrderDetail::where('order_id', $orderId)->get();
 
-                foreach ($details as $detail) {
-                    Inventory::where('variant_id', $detail->variant_id)
-                        ->update([
-                            'soluong_ton' => DB::raw("GREATEST(soluong_ton - {$detail->quantity}, 0)"),
-                            'soluong_dat' => DB::raw("GREATEST(soluong_dat - {$detail->quantity}, 0)"),
-                        ]);
-                }
+                // soluong_dat giữ nguyên khi delivered — phản ánh tổng đã xác nhận
+                // soluong_ton và soluong_co_the_ban đã trừ từ bước confirm
 
                 $order->update([
                     'order_status'   => 'delivered',
                     'payment_status' => 'paid',
                 ]);
-                $this->recordStatusHistory($orderId, $oldStatus, 'delivered', 'Hoàn tất giao hàng và xuất kho', $adminId);
+                $this->recordStatusHistory($orderId, $oldStatus, 'delivered', 'Hoàn tất giao hàng', $adminId);
 
                 $this->completeCodPayment($orderId);
 
-                return ['success' => true, 'message' => 'Hoàn tất đơn hàng và xuất kho thành công'];
+                return ['success' => true, 'message' => 'Hoàn tất đơn hàng thành công'];
             });
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -284,13 +284,15 @@ class OrderService
 
                 $oldStatus = $order->order_status;
 
-                // Giải phóng hàng đã giữ (nếu đã confirmed/processing)
+                // Hoàn lại tồn kho nếu đơn đã được confirmed/processing
                 if (in_array($oldStatus, ['confirmed', 'processing'])) {
                     $details = OrderDetail::where('order_id', $orderId)->get();
                     foreach ($details as $detail) {
                         Inventory::where('variant_id', $detail->variant_id)
                             ->update([
-                                'soluong_dat' => DB::raw("GREATEST(soluong_dat - {$detail->quantity}, 0)"),
+                                'soluong_ton'        => DB::raw("soluong_ton + {$detail->quantity}"),
+                                'soluong_dat'        => DB::raw("GREATEST(soluong_dat - {$detail->quantity}, 0)"),
+                                'soluong_co_the_ban' => DB::raw("soluong_co_the_ban + {$detail->quantity}"),
                             ]);
                     }
                 }
@@ -322,12 +324,15 @@ class OrderService
             $order = Order::lockForUpdate()->findOrFail($orderId);
             $oldStatus = $order->order_status;
 
+            // Hoàn lại tồn kho nếu đơn đã được confirmed/processing
             if (in_array($oldStatus, ['confirmed', 'processing'])) {
                 $details = OrderDetail::where('order_id', $orderId)->get();
                 foreach ($details as $detail) {
                     Inventory::where('variant_id', $detail->variant_id)
                         ->update([
-                            'soluong_dat' => DB::raw("GREATEST(soluong_dat - {$detail->quantity}, 0)"),
+                            'soluong_ton'        => DB::raw("soluong_ton + {$detail->quantity}"),
+                            'soluong_dat'        => DB::raw("GREATEST(soluong_dat - {$detail->quantity}, 0)"),
+                            'soluong_co_the_ban' => DB::raw("soluong_co_the_ban + {$detail->quantity}"),
                         ]);
                 }
             }
@@ -417,7 +422,7 @@ class OrderService
 
         return $details->map(function ($detail) {
             $inventory = $detail->variant?->inventory;
-            $available = $inventory ? ($inventory->soluong_ton - $inventory->soluong_dat) : 0;
+            $available = $inventory?->availableQuantity() ?? 0;
 
             return [
                 'detail_id'     => $detail->detail_id,

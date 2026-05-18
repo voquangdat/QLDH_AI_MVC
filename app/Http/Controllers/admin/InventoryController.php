@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Inventory;
+use App\Models\Product;
 use App\Models\Variant;
 use Illuminate\Http\Request;
 
@@ -71,15 +72,45 @@ class InventoryController extends Controller
     {
         $productId = $request->get('product_id');
 
-        $query = Variant::with(['product', 'color', 'size', 'inventory']);
+        $product = $productId
+            ? Product::with(['category', 'images'])->findOrFail($productId)
+            : null;
 
-        if ($productId) {
-            $query->where('product_id', $productId);
+        $variants = Variant::with(['product.category', 'product.images', 'color', 'size', 'inventory'])
+            ->when($productId, fn($q) => $q->where('product_id', $productId))
+            ->get();
+
+        $stats = [
+            'tong_bienthe' => $variants->count(),
+            'tong_ton_kho' => $variants->sum(fn($v) => $v->inventory?->soluong_ton ?? 0),
+            'co_the_ban'   => $variants->sum(fn($v) => $v->inventory?->availableQuantity() ?? 0),
+            'het_hang'     => $variants->filter(fn($v) => $v->isOutOfStock())->count(),
+        ];
+
+        return view('admin.inventory.detail', compact('variants', 'product', 'stats'));
+    }
+
+    public function initStock(Request $request)
+    {
+        $request->validate([
+            'variant_id' => 'required|integer|exists:variant,variant_id',
+        ]);
+
+        $exists = Inventory::where('variant_id', $request->variant_id)->exists();
+
+        if ($exists) {
+            return response()->json(['success' => false, 'message' => 'Tồn kho đã tồn tại']);
         }
 
-        $variants = $query->get();
+        Inventory::create([
+            'variant_id'         => $request->variant_id,
+            'soluong_ton'        => 0,
+            'soluong_dat'        => 0,
+            'soluong_co_the_ban' => 0,
+            'muc_canh_bao'       => 5,
+        ]);
 
-        return view('admin.inventory.detail', compact('variants'));
+        return response()->json(['success' => true, 'message' => 'Khởi tạo tồn kho thành công!']);
     }
 
     public function updateStock(Request $request)

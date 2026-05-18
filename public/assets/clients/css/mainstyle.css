@@ -1685,6 +1685,24 @@ a{
 .size-item input:checked~ span {
     color: red;
 }
+.size-item--out {
+    opacity: 0.4;
+    cursor: not-allowed;
+    position: relative;
+}
+.size-item--out::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e74c3c;
+    transform: rotate(-45deg);
+}
+.size-item--out input {
+    cursor: not-allowed;
+}
 .quantity {
     display: flex;
     margin-bottom: 20px;

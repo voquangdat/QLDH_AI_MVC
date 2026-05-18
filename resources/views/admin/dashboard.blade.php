@@ -48,7 +48,7 @@
                 <h3>Đơn hàng</h3>
                 <p>Theo dõi và xử lý đơn hàng</p>
             </div>
-            <div class="admin-card">
+            <div class="admin-card" style="cursor: pointer;" onclick="window.location='{{ route('admin.reports.index') }}'">
                 <i class="fas fa-chart-bar"></i>
                 <h3>Báo cáo Thống kê</h3>
                 <p>Doanh thu và phân tích kinh doanh</p>
@@ -84,10 +84,14 @@
                     <i class="fas fa-shopping-cart"></i>
                     <span>Quản lý Đơn hàng</span>
                 </a>
-                <a href="#" class="menu-item">
+                <a href="{{ route('admin.reports.index') }}" class="menu-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo Thống kê</span>
+                </a>
+                <!-- <a href="#" class="menu-item">
                     <i class="fas fa-credit-card"></i>
                     <span>Quản lý Thanh toán</span>
-                </a>
+                </a> -->
                 <a href="#" class="menu-item">
                     <i class="fas fa-newspaper"></i>
                     <span>Quản lý Tin tức</span>

@@ -108,6 +108,44 @@ class OrderController extends Controller
     }
 
     /**
+     * Polling API — trả về đơn hàng mới kể từ timestamp.
+     * JS admin gọi mỗi 30 giây: GET /admin/orders/check-new?since=1234567890
+     */
+    public function checkNew(Request $request)
+    {
+        $since = $request->query('since');
+
+        $query = Order::select('id', 'order_number', 'order_status', 'total_amount', 'notes', 'created_at')
+            ->orderByDesc('created_at');
+
+        if ($since) {
+            $query->where('created_at', '>', \Carbon\Carbon::createFromTimestamp($since));
+        } else {
+            $query->where('created_at', '>=', now()->subSeconds(30));
+        }
+
+        $newOrders = $query->get()->map(function ($order) {
+            $info = $order->deliveryInfo();
+            return [
+                'id'           => $order->id,
+                'order_number' => $order->order_number,
+                'order_status' => $order->order_status,
+                'total_amount' => number_format($order->total_amount) . 'đ',
+                'customer'     => $info['name']  ?? 'Khách',
+                'phone'        => $info['phone'] ?? '',
+                'created_at'   => $order->created_at->format('d/m/Y H:i'),
+                'url'          => route('admin.orders.show', $order->id),
+            ];
+        });
+
+        return response()->json([
+            'count'      => $newOrders->count(),
+            'orders'     => $newOrders,
+            'server_time' => now()->timestamp,
+        ]);
+    }
+
+    /**
      * Cập nhật trạng thái thanh toán thủ công.
      */
     public function updatePayment(Request $request, int $id)

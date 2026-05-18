@@ -25,7 +25,7 @@ class ProductController extends Controller
     {
         $products = Product::with(['category', 'subcategory', 'images'])
             ->latest('product_id')
-            ->get();
+            ->paginate(15);
 
         return view('admin.products.list', compact('products'));
     }

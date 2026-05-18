@@ -15,14 +15,20 @@ class OrderService
 {
     // ==================== TẠO ĐƠN HÀNG ====================
 
-    public function generateOrderNumber(): string
+    /**
+     * Sinh mã đơn hàng duy nhất: VFB + ngày + microsecond + random.
+     * Dùng microsecond thay vì max(id) để tránh race condition khi nhiều request cùng lúc.
+     */
+    private function generateOrderNumber(): string
     {
-        $maxId = Order::max('id') ?? 0;
-        return 'VFB' . str_pad($maxId + 1, 6, '0', STR_PAD_LEFT);
+        [$sec, $usec] = explode(' ', microtime());
+        $micro = substr(str_replace('0.', '', $usec . $sec), 0, 10);
+        return 'VFB' . now()->format('ymd') . strtoupper(substr($micro, -5)) . random_int(10, 99);
     }
 
     /**
      * Tạo đơn hàng từ giỏ hàng.
+     * Kiểm tra tồn kho ngay khi đặt để tránh oversell.
      *
      * @param  array       $deliveryData  Thông tin giao hàng (name, phone, province, district, ward, address)
      * @param  Collection  $cartItems     Danh sách sản phẩm trong giỏ (Cart hoặc GuestCartItem)
@@ -37,52 +43,91 @@ class OrderService
 
         $orderId = null;
 
-        DB::transaction(function () use ($deliveryData, $cartItems, $userId, &$orderId) {
-            $subtotal    = $cartItems->sum(fn($item) => $item->subtotal());
-            $shippingFee = $subtotal >= 2_000_000 ? 0 : 30_000;
-            $total       = $subtotal + $shippingFee;
+        try {
+            DB::transaction(function () use ($deliveryData, $cartItems, $userId, &$orderId) {
 
-            $deliveryInfo = json_encode([
-                'name'     => $deliveryData['name'],
-                'phone'    => $deliveryData['phone'],
-                'province' => $deliveryData['province'],
-                'district' => $deliveryData['district'],
-                'ward'     => $deliveryData['ward'],
-                'address'  => $deliveryData['address'],
-            ], JSON_UNESCAPED_UNICODE);
+                // ── Kiểm tra tồn kho với lock để tránh oversell ──────────
+                $outOfStock = [];
 
-            $order = Order::create([
-                'user_id'         => $userId,
-                'order_number'    => $this->generateOrderNumber(),
-                'order_date'      => now(),
-                'order_status'    => 'pending',
-                'payment_status'  => 'unpaid',
-                'subtotal'        => $subtotal,
-                'shipping_fee'    => $shippingFee,
-                'discount_amount' => 0,
-                'tax'             => 0,
-                'total_amount'    => $total,
-                'notes'           => $deliveryInfo,
-            ]);
+                foreach ($cartItems as $item) {
+                    $inventory = Inventory::lockForUpdate()
+                        ->where('variant_id', $item->variant_id)
+                        ->first();
 
-            foreach ($cartItems as $item) {
-                $product = $item->variant->product;
-                $image   = $product->images->first();
+                    if (!$inventory) {
+                        $outOfStock[] = "{$item->variant->product->product_name}: Không có thông tin tồn kho";
+                        continue;
+                    }
 
-                OrderDetail::create([
-                    'order_id'     => $order->id,
-                    'product_id'   => $product->product_id,
-                    'variant_id'   => $item->variant_id,
-                    'quantity'     => $item->quantity,
-                    'product_name' => $product->product_name,
-                    'product_gia'  => $product->product_gia,
-                    'product_anh'  => $image->product_anh ?? null,
-                    'subtotal'     => $item->subtotal(),
+                    $available = $inventory->soluong_ton - $inventory->soluong_dat;
+
+                    if ($available < $item->quantity) {
+                        $productName = $item->variant->product->product_name;
+                        $colorName   = $item->variant->color->color_ten  ?? '';
+                        $sizeName    = $item->variant->size->product_size ?? '';
+                        $label       = trim("{$productName} ({$colorName} / {$sizeName})");
+                        $outOfStock[] = "{$label}: Cần {$item->quantity}, còn {$available}";
+                    }
+                }
+
+                if (!empty($outOfStock)) {
+                    throw new \RuntimeException(
+                        'Một số sản phẩm không đủ hàng: ' . implode('; ', $outOfStock)
+                    );
+                }
+
+                // ── Tạo đơn hàng ─────────────────────────────────────────
+                $subtotal    = $cartItems->sum(fn($item) => $item->subtotal());
+                $shippingFee = $subtotal >= 2_000_000 ? 0 : 30_000;
+                $total       = $subtotal + $shippingFee;
+
+                $deliveryInfo = json_encode([
+                    'name'     => $deliveryData['name'],
+                    'phone'    => $deliveryData['phone'],
+                    'province' => $deliveryData['province'],
+                    'district' => $deliveryData['district'],
+                    'ward'     => $deliveryData['ward'],
+                    'address'  => $deliveryData['address'],
+                ], JSON_UNESCAPED_UNICODE);
+
+                $order = Order::create([
+                    'user_id'         => $userId,
+                    'order_number'    => $this->generateOrderNumber(),
+                    'order_date'      => now(),
+                    'order_status'    => 'pending',
+                    'payment_status'  => 'unpaid',
+                    'subtotal'        => $subtotal,
+                    'shipping_fee'    => $shippingFee,
+                    'discount_amount' => 0,
+                    'tax'             => 0,
+                    'total_amount'    => $total,
+                    'notes'           => $deliveryInfo,
                 ]);
-            }
 
-            $orderId = $order->id;
-        });
+                foreach ($cartItems as $item) {
+                    $product = $item->variant->product;
+                    $image   = $product->images->first();
+
+                    OrderDetail::create([
+                        'order_id'     => $order->id,
+                        'product_id'   => $product->product_id,
+                        'variant_id'   => $item->variant_id,
+                        'quantity'     => $item->quantity,
+                        'product_name' => $product->product_name,
+                        'product_gia'  => $product->product_gia,
+                        'product_anh'  => $image->product_anh ?? null,
+                        'subtotal'     => $item->subtotal(),
+                    ]);
+                }
+
+                $orderId = $order->id;
+            });
+        } catch (\RuntimeException $e) {
+            // Lỗi hết hàng — trả về message thân thiện
+            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Có lỗi xảy ra, vui lòng thử lại.'];
+        }
 
         $order = Order::find($orderId);
 
@@ -205,7 +250,10 @@ class OrderService
                         ]);
                 }
 
-                $order->update(['order_status' => 'delivered']);
+                $order->update([
+                    'order_status'   => 'delivered',
+                    'payment_status' => 'paid',
+                ]);
                 $this->recordStatusHistory($orderId, $oldStatus, 'delivered', 'Hoàn tất giao hàng và xuất kho', $adminId);
 
                 $this->completeCodPayment($orderId);

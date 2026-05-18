@@ -23,19 +23,44 @@ class Inventory extends Model
         return $this->belongsTo(Variant::class, 'variant_id', 'variant_id');
     }
 
+    // ===== Query Scopes =====
+
+    public function scopeInStock($query)
+    {
+        return $query->whereColumn('soluong_co_the_ban', '>', 'muc_canh_bao');
+    }
+
+    public function scopeLowStock($query)
+    {
+        return $query->where('soluong_co_the_ban', '>', 0)
+                     ->whereColumn('soluong_co_the_ban', '<=', 'muc_canh_bao');
+    }
+
+    public function scopeOutOfStock($query)
+    {
+        return $query->where('soluong_co_the_ban', '<=', 0);
+    }
+
     // ===== Helpers =====
-    public function isOutOfStock()
+
+    public function isOutOfStock(): bool
     {
         return $this->soluong_co_the_ban <= 0;
     }
 
-    public function isLowStock()
+    public function isLowStock(): bool
     {
-        return $this->soluong_co_the_ban <= $this->muc_canh_bao;
+        return $this->soluong_co_the_ban > 0
+            && $this->soluong_co_the_ban <= $this->muc_canh_bao;
     }
 
-    public function availableQuantity()
+    public function availableQuantity(): int
     {
         return max(0, $this->soluong_co_the_ban);
+    }
+
+    public function recalculate(): void
+    {
+        $this->soluong_co_the_ban = max(0, $this->soluong_ton - $this->soluong_dat);
     }
 }

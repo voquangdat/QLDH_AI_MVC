@@ -6,6 +6,7 @@
     <title>@yield('title', 'Admin') - VoxFootball</title>
     <link rel="stylesheet" href="{{ asset('assets/clients/css/admin-dashboard.css') }}">
     <script src="https://kit.fontawesome.com/54f0cb7e4a.js" crossorigin="anonymous"></script>
+    @stack('styles')
 </head>
 <body>
 
@@ -28,5 +29,6 @@
     {{-- Content --}}
     @yield('content')
 
+    @stack('scripts')
 </body>
 </html>

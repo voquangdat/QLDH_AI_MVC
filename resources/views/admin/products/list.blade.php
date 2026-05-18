@@ -49,9 +49,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($products as $index => $product)
+                    @foreach ($products as $product)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $loop->index + $products->firstItem() }}</td>
                             <td>
                                 @if ($product->images->isNotEmpty())
                                     <img src="{{ asset('uploads/' . $product->images->first()->product_anh) }}"
@@ -112,6 +112,12 @@
             </div>
         @endif
     </div>
+
+    @if ($products->hasPages())
+        <div style="margin-top:16px; display:flex; justify-content:flex-end">
+            {{ $products->links() }}
+        </div>
+    @endif
 
 </div>
 @endsection

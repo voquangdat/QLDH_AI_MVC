@@ -2,6 +2,171 @@
 @section('title', 'Quản lý Đơn hàng')
 @section('page-title', 'Quản lý Đơn hàng')
 
+@push('scripts')
+<script>
+(function () {
+    const POLL_INTERVAL = 30000;
+    const CHECK_URL     = '{{ route('admin.orders.check-new') }}';
+
+    let lastTimestamp = Math.floor(Date.now() / 1000);
+    let toastEl       = null;
+    let newOrderCount = 0;
+
+    // ── CSS ───────────────────────────────────────────────────────
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { opacity:0; transform:translateX(40px); }
+            to   { opacity:1; transform:translateX(0); }
+        }
+        @keyframes rowIn {
+            from { opacity:0; background:#dbeafe; transform:translateY(-8px); }
+            to   { opacity:1; background:#dbeafe; transform:translateY(0); }
+        }
+        .new-order-row {
+            animation: rowIn .4s ease forwards;
+        }
+        .new-order-row td {
+            background: #dbeafe !important;
+            transition: background 3s ease;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // ── Chèn hàng mới vào đầu bảng ───────────────────────────────
+    function prependOrderRow(order) {
+        const tbody = document.getElementById('orders-tbody');
+        if (!tbody) return;
+
+        // Xóa dòng "Không có đơn hàng nào" nếu còn
+        const emptyRow = tbody.querySelector('td[colspan]');
+        if (emptyRow) emptyRow.closest('tr').remove();
+
+        const statusMap = {
+            pending:    { bg:'#fff3cd', color:'#856404', label:'Chờ xác nhận' },
+            confirmed:  { bg:'#d1ecf1', color:'#0c5460', label:'Đã xác nhận'  },
+            processing: { bg:'#d0e8ff', color:'#1a56db', label:'Đang xử lý'   },
+            delivered:  { bg:'#d4edda', color:'#155724', label:'Đã giao'       },
+            cancelled:  { bg:'#f8d7da', color:'#721c24', label:'Đã hủy'        },
+        };
+        const sc = statusMap[order.order_status] ?? { bg:'#e9ecef', color:'#495057', label: order.order_status };
+
+        const tr = document.createElement('tr');
+        tr.classList.add('new-order-row');
+        tr.setAttribute('data-order-id', order.id);
+        tr.innerHTML = `
+            <td style="padding:12px 14px;font-weight:600;color:#2563eb;">${order.order_number}</td>
+            <td style="padding:12px 14px;">
+                <div style="font-weight:500;">${order.customer}</div>
+                <div style="color:#888;font-size:12px;">${order.phone ?? ''}</div>
+            </td>
+            <td style="padding:12px 14px;color:#555;">${order.created_at}</td>
+            <td style="padding:12px 14px;text-align:right;font-weight:600;">${order.total_amount}</td>
+            <td style="padding:12px 14px;text-align:center;">
+                <span style="background:${sc.bg};color:${sc.color};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;">
+                    ${sc.label}
+                </span>
+            </td>
+            <td style="padding:12px 14px;text-align:center;">
+                <span style="background:#f8d7da;color:#721c24;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;">
+                    Chưa TT
+                </span>
+            </td>
+            <td style="padding:12px 14px;text-align:center;">
+                <a href="${order.url}"
+                   style="padding:5px 12px;background:#2563eb;color:#fff;border-radius:5px;font-size:12px;text-decoration:none;">
+                    <i class="fas fa-eye"></i> Xem
+                </a>
+            </td>
+        `;
+
+        tbody.insertBefore(tr, tbody.firstChild);
+
+        // Sau 4 giây, fade màu nền highlight về trắng
+        setTimeout(() => {
+            tr.querySelectorAll('td').forEach(td => td.style.background = '#fff');
+        }, 4000);
+    }
+
+    // ── Toast notification ────────────────────────────────────────
+    function showToast(order) {
+        if (!toastEl) {
+            toastEl = document.createElement('div');
+            toastEl.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:340px;';
+            document.body.appendChild(toastEl);
+        }
+
+        const card = document.createElement('div');
+        card.setAttribute('data-toast', '');
+        card.style.cssText = 'background:#fff;border-left:4px solid #2563eb;border-radius:8px;padding:14px 16px;box-shadow:0 4px 16px rgba(0,0,0,.15);font-size:13px;animation:slideIn .3s ease;';
+        card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+                <strong style="color:#2563eb;">🛒 Đơn hàng mới!</strong>
+                <button onclick="this.closest('[data-toast]').remove()"
+                        style="background:none;border:none;cursor:pointer;color:#999;font-size:16px;line-height:1;">×</button>
+            </div>
+            <div style="color:#333;margin-bottom:2px;"><strong>${order.order_number}</strong> — ${order.customer}</div>
+            <div style="color:#888;margin-bottom:10px;">${order.total_amount} · ${order.created_at}</div>
+            <a href="${order.url}" style="display:inline-block;padding:6px 14px;background:#2563eb;color:#fff;border-radius:5px;text-decoration:none;font-size:12px;">
+                Xem đơn hàng
+            </a>
+        `;
+        toastEl.appendChild(card);
+        setTimeout(() => card.remove(), 15000);
+    }
+
+    // ── Badge số đơn mới ──────────────────────────────────────────
+    function updateBadge(delta) {
+        newOrderCount += delta;
+        let badge = document.getElementById('new-order-badge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.id = 'new-order-badge';
+            badge.style.cssText = 'background:#e53e3e;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle;cursor:pointer;';
+            badge.title = 'Nhấn để reset bộ đếm';
+            badge.onclick = () => { newOrderCount = 0; badge.remove(); };
+            const h1 = document.querySelector('.admin-header h1');
+            if (h1) h1.appendChild(badge);
+        }
+        badge.textContent = `+${newOrderCount} đơn mới`;
+    }
+
+    // ── Cập nhật thống kê tổng đơn + chờ xác nhận ────────────────
+    function updateStats(count) {
+        const statCells = document.querySelectorAll('[data-stat]');
+        statCells.forEach(el => {
+            if (el.dataset.stat === 'total')   el.textContent = parseInt(el.textContent.replace(/\D/g,'')) + count;
+            if (el.dataset.stat === 'pending')  el.textContent = parseInt(el.textContent.replace(/\D/g,'')) + count;
+        });
+    }
+
+    // ── Polling ───────────────────────────────────────────────────
+    async function poll() {
+        try {
+            const res  = await fetch(`${CHECK_URL}?since=${lastTimestamp}`);
+            const data = await res.json();
+
+            if (data.count > 0) {
+                // Chèn từ dưới lên để thứ tự đúng (mới nhất ở trên cùng)
+                [...data.orders].reverse().forEach(order => {
+                    prependOrderRow(order);
+                    showToast(order);
+                });
+                updateBadge(data.count);
+                updateStats(data.count);
+            }
+
+            lastTimestamp = data.server_time;
+        } catch (e) {
+            console.warn('Polling lỗi:', e);
+        }
+    }
+
+    setInterval(poll, POLL_INTERVAL);
+})();
+</script>
+@endpush
+
 @section('content')
 <div class="product-management-container">
 
@@ -25,11 +190,11 @@
     @if($statistics)
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;">
         <div style="background:#fff;border-radius:8px;padding:16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.08);">
-            <div style="font-size:24px;font-weight:700;color:#333;">{{ number_format($statistics['total_orders']) }}</div>
+            <div data-stat="total" style="font-size:24px;font-weight:700;color:#333;">{{ number_format($statistics['total_orders']) }}</div>
             <div style="color:#666;font-size:13px;">Tổng đơn</div>
         </div>
         <div style="background:#fff3cd;border-radius:8px;padding:16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.08);">
-            <div style="font-size:24px;font-weight:700;color:#856404;">{{ number_format($statistics['pending_orders']) }}</div>
+            <div data-stat="pending" style="font-size:24px;font-weight:700;color:#856404;">{{ number_format($statistics['pending_orders']) }}</div>
             <div style="color:#856404;font-size:13px;">Chờ xác nhận</div>
         </div>
         <div style="background:#d1ecf1;border-radius:8px;padding:16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.08);">
@@ -120,7 +285,7 @@
                     <th style="padding:12px 14px;text-align:center;border-bottom:1px solid #dee2e6;">Thao tác</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="orders-tbody">
                 @forelse($orders as $order)
                     @php
                         $info = $order->deliveryInfo();

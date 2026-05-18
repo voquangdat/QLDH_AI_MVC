@@ -21,6 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
+
+        // Exempt MoMo IPN khỏi CSRF vì đây là server-to-server request
+        $middleware->validateCsrfTokens(except: [
+            'thanh-toan/momo/ipn',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

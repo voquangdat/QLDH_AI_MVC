@@ -44,6 +44,11 @@ Route::get('/thanh-toan/{orderId}',              [PaymentController::class, 'sho
 Route::post('/thanh-toan/{orderId}',             [PaymentController::class, 'process'])->name('payment.process');
 Route::get('/thanh-toan/{orderId}/thanh-cong',   [PaymentController::class, 'success'])->name('payment.success');
 
+// MoMo callback (redirect từ MoMo về trình duyệt)
+Route::get('/thanh-toan/momo/callback',  [PaymentController::class, 'momoCallback'])->name('payment.momo.callback');
+// MoMo IPN (server-to-server POST, exempt CSRF ở bootstrap/app.php)
+Route::post('/thanh-toan/momo/ipn',     [PaymentController::class, 'momoIpn'])->name('payment.momo.ipn');
+
 // Đơn hàng
 Route::get('/don-hang', function () { return redirect('/'); })->name('orders');
 Route::get('/don-hang/{orderId}', [PaymentController::class, 'detail'])->name('order.detail');

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ReportsController;
 
 // Các trang cần middleware admin
 Route::middleware('admin')->group(function () {
@@ -27,6 +28,7 @@ Route::middleware('admin')->group(function () {
     Route::resource('products', ProductController::class)->names('products');
 
     // Đơn hàng
+    Route::get('orders/check-new',                        [OrderController::class, 'checkNew'])->name('orders.check-new');
     Route::get('orders',                                  [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{id}',                             [OrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{id}/confirm',                    [OrderController::class, 'confirm'])->name('orders.confirm');
@@ -34,6 +36,12 @@ Route::middleware('admin')->group(function () {
     Route::post('orders/{id}/deliver',                    [OrderController::class, 'deliver'])->name('orders.deliver');
     Route::post('orders/{id}/cancel',                     [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('orders/{id}/update-payment',             [OrderController::class, 'updatePayment'])->name('orders.update-payment');
+
+    // Báo cáo & thống kê
+    Route::get('reports',          [ReportsController::class, 'index'])    ->name('reports.index');
+    Route::get('reports/orders',   [ReportsController::class, 'orders'])   ->name('reports.orders');
+    Route::get('reports/products', [ReportsController::class, 'products']) ->name('reports.products');
+    Route::get('reports/revenue',  [ReportsController::class, 'revenue'])  ->name('reports.revenue');
 
     // Tồn kho
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');

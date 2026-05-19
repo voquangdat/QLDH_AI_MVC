@@ -6,6 +6,7 @@ use App\Http\Controllers\Client\AuthController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\DeliveryController;
 use App\Http\Controllers\Client\PaymentController;
+use App\Http\Controllers\Client\ProfileController;
 
 // Trang chủ
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -54,8 +55,14 @@ Route::get('/don-hang', function () { return redirect('/'); })->name('orders');
 Route::get('/don-hang/{orderId}', [PaymentController::class, 'detail'])->name('order.detail');
 Route::get('/don-hang-khach', [PaymentController::class, 'guestDetail'])->name('order.guest-detail');
 
-// Tài khoản
-Route::get('/profile', function () { return redirect('/'); })->name('profile');
+// Tài khoản (yêu cầu đăng nhập)
+Route::middleware('auth')->group(function () {
+    Route::get('/profile',              [ProfileController::class, 'show'])           ->name('profile');
+    Route::post('/profile/update',      [ProfileController::class, 'update'])         ->name('profile.update');
+    Route::post('/profile/password',    [ProfileController::class, 'changePassword']) ->name('profile.password');
+    Route::get('/profile/orders',       [ProfileController::class, 'orders'])         ->name('profile.orders');
+    Route::post('/profile/cancel-order',[ProfileController::class, 'cancelOrder'])    ->name('profile.cancel-order');
+});
 
 // Khác
 Route::get('/tin-tuc', function () { return redirect('/'); })->name('news');

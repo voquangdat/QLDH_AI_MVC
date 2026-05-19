@@ -9,7 +9,7 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $featuredProducts = Product::with(['images', 'variants.inventory'])
+        $featuredProducts = Product::with(['images', 'variants.inventory', 'variants.size', 'reviews'])
             ->where('product_hot', true)
             ->latest()
             ->take(8)

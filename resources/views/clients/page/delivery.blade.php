@@ -46,6 +46,11 @@
 
         <div class="delivery-content row">
 
+            {{-- Form logout (ngoài form delivery) --}}
+            @auth
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none">@csrf</form>
+            @endauth
+
             {{-- Form địa chỉ giao hàng --}}
             <div class="delivery-content-left">
                 <form action="{{ route('delivery.store') }}" method="POST">
@@ -59,7 +64,6 @@
                         <p>Xin chào, <strong>{{ Auth::user()->fullname }}</strong> &nbsp;|&nbsp;
                            <a href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();" style="color:#e74c3c;font-size:11px;">Đăng xuất</a>
                         </p>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none">@csrf</form>
                     </div>
                     @else
                     <div class="delivery-content-left-dangnhap row" style="background:#fff8e1;padding:8px 12px;border-left:3px solid #f39c12;margin-top:12px;">

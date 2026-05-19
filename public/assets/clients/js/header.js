@@ -72,6 +72,24 @@
             });
         }
 
+        // User account dropdown
+        const userToggle = document.querySelector('.user-dropdown-toggle');
+        const userMenu   = document.querySelector('.user-dropdown-menu');
+
+        if (userToggle && userMenu) {
+            userToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                userMenu.classList.toggle('show');
+            });
+
+            // Đóng dropdown khi click ra ngoài
+            document.addEventListener('click', function (e) {
+                if (!userToggle.contains(e.target) && !userMenu.contains(e.target)) {
+                    userMenu.classList.remove('show');
+                }
+            });
+        }
+
         // Scroll effect for header
         window.addEventListener('scroll', function() {
             const header = document.querySelector('.top');

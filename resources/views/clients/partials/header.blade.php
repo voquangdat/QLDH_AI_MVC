@@ -60,7 +60,7 @@
                             <a href="{{ route('profile') }}" class="dropdown-item">
                                 <i class="fas fa-user"></i> Thông tin cá nhân
                             </a>
-                            <a href="{{ route('orders') }}" class="dropdown-item">
+                            <a href="{{ route('profile.orders') }}" class="dropdown-item">
                                 <i class="fas fa-shopping-bag"></i> Đơn hàng
                             </a>
                             <div class="dropdown-divider"></div>

@@ -163,140 +163,84 @@
 // }
 
 
-// test mooiwi
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Home.js loaded successfully!'); // Debug
-    
-    // Add to cart functionality
-    document.querySelectorAll('.btn-cart').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const productId = this.dataset.productId;
-            const productCard = this.closest('.product-card');
-            const selectedSize = productCard.querySelector('.size-btn.active')?.dataset.size || 'M';
-            
-            addToCart(productId, selectedSize, this);
-        });
-    });
-    
-    // Buy now functionality
-    document.querySelectorAll('.btn-buy').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const productId = this.dataset.productId;
-            buyNow(productId);
-        });
-    });
-    
-    // Size selection
+document.addEventListener('DOMContentLoaded', function () {
+    // Size selection — update cart button's variant when size changes
     document.querySelectorAll('.size-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Remove active class from siblings
-            this.parentNode.querySelectorAll('.size-btn').forEach(sibling => {
-                sibling.classList.remove('active');
-            });
-            // Add active class to clicked button
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const card = this.closest('.product-card');
+            card.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
+
+            const cartBtn = card.querySelector('.btn-cart');
+            if (cartBtn) cartBtn.dataset.variantId = this.dataset.variantId;
         });
     });
-    
-    // Wishlist functionality
-    document.querySelectorAll('.wishlist-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const icon = this.querySelector('i');
-            if (icon.classList.contains('far')) {
-                icon.classList.replace('far', 'fas');
-                this.style.color = '#e74c3c';
-            } else {
-                icon.classList.replace('fas', 'far');
-                this.style.color = '';
+
+    document.querySelectorAll('.btn-cart').forEach(btn => {
+        btn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            const variantId = this.dataset.variantId;
+            if (!variantId) {
+                window.location.href = this.dataset.productUrl;
+                return;
             }
+            await addToCartAjax(variantId, this);
         });
     });
 });
 
-// Add to cart function
-function addToCart(productId, size, button) {
-    console.log('Adding to cart:', productId, size); // Debug
-    
-    // Add animation
+async function addToCartAjax(variantId, button) {
     const originalHTML = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     button.disabled = true;
-    
-    // Create form data
-    const formData = new FormData();
-    formData.append('action', 'add_to_cart');
-    formData.append('product_id', productId);
-    formData.append('size', size);
-    formData.append('quantity', 1);
-    
-    // Send AJAX request
-    fetch('?page=home&action=addToCart', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
+
+    try {
+        const fd = new FormData();
+        fd.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        fd.append('variant_id', variantId);
+        fd.append('quantity', 1);
+
+        const res  = await fetch(CART_STORE_URL, { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (data.success) {
             button.innerHTML = '<i class="fas fa-check"></i> Đã thêm';
-            button.style.background = '#28a745';
-            
-            // Update cart count if exists
-            const cartCount = document.querySelector('.cart-count');
-            if (cartCount) {
-                cartCount.textContent = result.cart_count || '0';
-            }
-            
-            // Show success message
-            showMessage('Đã thêm sản phẩm vào giỏ hàng!', 'success');
-            
+            button.style.background = '#22c55e';
+            await refreshMiniCart(data.cart_count);
         } else {
-            throw new Error(result.message || 'Có lỗi xảy ra');
+            button.innerHTML = '<i class="fas fa-times"></i> ' + (data.message ?? 'Lỗi');
+            button.style.background = '#ef4444';
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
+    } catch {
         button.innerHTML = '<i class="fas fa-times"></i> Lỗi';
-        button.style.background = '#dc3545';
-        showMessage('Không thể thêm vào giỏ hàng!', 'error');
-    })
-    .finally(() => {
-        // Reset button after 2 seconds
+        button.style.background = '#ef4444';
+    } finally {
         setTimeout(() => {
             button.innerHTML = originalHTML;
             button.style.background = '';
             button.disabled = false;
         }, 2000);
-    });
+    }
 }
 
-function buyNow(productId) {
-    window.location.href = `?page=product&id=${productId}`;
-}
+async function refreshMiniCart(count) {
+    try {
+        const res  = await fetch(CART_MINI_URL);
+        const data = await res.json();
 
-// Show message function
-function showMessage(message, type = 'info') {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `alert alert-${type}`;
-    messageDiv.textContent = message;
-    messageDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        padding: 10px 20px;
-        border-radius: 5px;
-        color: white;
-        background: ${type === 'success' ? '#28a745' : '#dc3545'};
-    `;
-    
-    document.body.appendChild(messageDiv);
-    
-    setTimeout(() => {
-        messageDiv.remove();
-    }, 3000);
+        const tmp = document.createElement('div');
+        tmp.innerHTML = data.html;
+
+        // Replace toàn bộ dropdown (items + footer với đúng display state)
+        const newDropdown = tmp.querySelector('#mini-cart-dropdown');
+        if (newDropdown) {
+            document.getElementById('mini-cart-dropdown').innerHTML = newDropdown.innerHTML;
+        }
+
+        // cart-count nằm ngoài dropdown — cập nhật riêng
+        document.querySelectorAll('#cart-count').forEach(el => el.textContent = data.count);
+    } catch { /* silent */ }
 }
 // Debug: Kiểm tra file JS có load không
 // console.log('Checking if home.js loaded...');

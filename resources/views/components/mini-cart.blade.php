@@ -44,7 +44,7 @@
                     <strong id="mc-total">{{ number_format($miniCartTotal) }}đ</strong>
                 </div>
                 <a href="{{ route('cart.index') }}" class="mc-btn-cart">Xem giỏ hàng</a>
-                <a href="#" class="mc-btn-checkout">Thanh toán</a>
+                <a href="{{ route('delivery.index') }}" class="mc-btn-checkout">Thanh toán</a>
             </div>
         @else
             <div class="mini-cart-footer" id="mc-footer" style="display:none"></div>

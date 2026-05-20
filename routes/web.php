@@ -7,6 +7,7 @@ use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\DeliveryController;
 use App\Http\Controllers\Client\PaymentController;
 use App\Http\Controllers\Client\ProfileController;
+use App\Http\Controllers\Client\ChatController;
 
 // Trang chủ
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -63,6 +64,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/orders',       [ProfileController::class, 'orders'])         ->name('profile.orders');
     Route::post('/profile/cancel-order',[ProfileController::class, 'cancelOrder'])    ->name('profile.cancel-order');
 });
+
+// Chatbot AI
+Route::post('/chat-ai', [ChatController::class, 'chat'])->name('chat.ai');
 
 // Khác
 Route::get('/tin-tuc', function () { return redirect('/'); })->name('news');

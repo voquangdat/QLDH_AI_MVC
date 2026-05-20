@@ -192,8 +192,17 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // Kiểm tra variant nào đang được tham chiếu bởi order_details
+        $usedVariantIds = $product->variants()
+            ->whereHas('orderDetails')
+            ->pluck('variant_id');
+
+        if ($usedVariantIds->isNotEmpty()) {
+            return redirect()->route('admin.products.list')
+                ->with('error', 'Không thể xóa sản phẩm "' . $product->product_name . '" vì đã có đơn hàng liên quan.');
+        }
+
         DB::transaction(function () use ($product) {
-            // Xóa inventory → variants → images → product
             foreach ($product->variants as $variant) {
                 $variant->inventory?->delete();
                 $variant->delete();
@@ -262,15 +271,18 @@ class ProductController extends Controller
             ]);
         }
 
-        // Xóa variants bị bỏ
+        // Xóa variants bị bỏ (bỏ qua nếu đã có đơn hàng)
         foreach (array_diff($existingSizeIds, $sizeIds) as $sizeId) {
             $variant = $product->variants()
                 ->where('color_id', $colorId)
                 ->where('product_size_id', $sizeId)
                 ->first();
 
-            $variant?->inventory?->delete();
-            $variant?->delete();
+            if (!$variant) continue;
+            if ($variant->orderDetails()->exists()) continue; // có đơn → giữ lại
+
+            $variant->inventory?->delete();
+            $variant->delete();
         }
     }
 }

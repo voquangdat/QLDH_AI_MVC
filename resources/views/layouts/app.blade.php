@@ -25,6 +25,8 @@
 
     </div>
 
+    @include('clients.partials.chat_ai')
+
     <script src="{{ asset('assets/clients/js/script.js') }}"></script>
     <script src="{{ asset('assets/clients/js/footer.js') }}"></script>
     <script>
